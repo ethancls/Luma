@@ -324,6 +324,10 @@ export default function MachineDetailPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <div className="ml-4 hidden md:block">
+          <PingSparkline machineId={id} />
+        </div>
       </PageHeader>
 
       {/* Status + type row */}
@@ -343,9 +347,6 @@ export default function MachineDetailPage() {
           </span>
         )}
       </div>
-
-      {/* Latency sparkline */}
-      <PingSparkline machineId={id} />
 
       {/* Machine info card */}
       <Card>

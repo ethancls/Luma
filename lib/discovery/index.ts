@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { discoverySources, services } from '@/db/schema';
+import { discoverySources, services, machines, serviceMachine } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { v4 as uuid } from 'uuid';
 import { discoverTraefik } from './traefik';
