@@ -243,12 +243,11 @@ export default function MachineDetailPage() {
       {/* Status + type row */}
       <div className="flex items-center gap-3">
         <StatusDot status={machine.status} />
-        <Badge
-          variant="secondary"
-          className={MACHINE_TYPE_CONFIG[machine.type]?.className}
+        <span
+          className={`inline-flex shrink-0 items-center rounded-sm px-2.5 py-0.5 text-sm font-medium ring-1 ring-inset ${MACHINE_TYPE_CONFIG[machine.type]?.className ?? ""}`}
         >
           {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
-        </Badge>
+        </span>
         {machine.lastSeen && (
           <span className="text-sm text-muted-foreground">
             Last seen: {formatDate(machine.lastSeen)}
@@ -269,12 +268,11 @@ export default function MachineDetailPage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Type</p>
-              <Badge
-                variant="secondary"
-                className={MACHINE_TYPE_CONFIG[machine.type]?.className}
+              <span
+                className={`inline-flex shrink-0 items-center rounded-sm px-2.5 py-0.5 text-sm font-medium ring-1 ring-inset ${MACHINE_TYPE_CONFIG[machine.type]?.className ?? ""}`}
               >
                 {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
-              </Badge>
+              </span>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">CPU</p>

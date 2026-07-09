@@ -200,12 +200,11 @@ export function MachineTable({
                 {machine.host}
               </TableCell>
               <TableCell>
-                <Badge
-                  variant="secondary"
-                  className={MACHINE_TYPE_CONFIG[machine.type]?.className}
+                <span
+                  className={`inline-flex shrink-0 items-center rounded-sm px-2.5 py-0.5 text-sm font-medium ring-1 ring-inset ${MACHINE_TYPE_CONFIG[machine.type]?.className ?? ""}`}
                 >
                   {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
-                </Badge>
+                </span>
               </TableCell>
               <TableCell className="text-muted-foreground/50">
                 &mdash;
