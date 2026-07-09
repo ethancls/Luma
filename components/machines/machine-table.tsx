@@ -43,6 +43,7 @@ interface Machine {
   notes: string | null;
   status: "online" | "offline" | "unknown";
   lastSeen: string | null;
+  latency: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -208,7 +209,7 @@ export function MachineTable({
                 </span>
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">
-                {(machine as any).latency != null ? `${(machine as any).latency}ms` : "-"}
+                {machine.latency != null ? `${machine.latency}ms` : "-"}
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">
                 {formatRelativeTime(machine.lastSeen)}
