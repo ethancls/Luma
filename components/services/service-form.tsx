@@ -102,6 +102,8 @@ export function ServiceForm({
   const [notes, setNotes] = useState("");
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [machines, setMachines] = useState<{ id: string; name: string }[]>([]);
+  const [machineId, setMachineId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; url?: string }>({});
 
@@ -120,19 +122,17 @@ export function ServiceForm({
     }
   }, [open, service]);
 
-  // Fetch categories when dialog opens
+  // Fetch categories + machines when dialog opens
   useEffect(() => {
     if (open) {
       fetch("/api/categories")
         .then((res) => res.json())
-        .then((json) => {
-          if (Array.isArray(json.data)) {
-            setCategories(json.data);
-          }
-        })
-        .catch(() => {
-          // Silently fail
-        });
+        .then((json) => { if (Array.isArray(json.data)) setCategories(json.data); })
+        .catch(() => {});
+      fetch("/api/machines?limit=100")
+        .then((res) => res.json())
+        .then((json) => { if (Array.isArray(json.data?.machines)) setMachines(json.data.machines); })
+        .catch(() => {});
     }
   }, [open]);
 
@@ -163,6 +163,7 @@ export function ServiceForm({
       port: port ? Number(port) : undefined,
       description: description.trim() || undefined,
       categoryId: categoryId || undefined,
+      machineId: machineId || undefined,
       tags: parseTags(tags),
       dockerComposeSnippet: dockerComposeSnippet.trim() || undefined,
       notes: notes.trim() || undefined,
@@ -312,6 +313,27 @@ export function ServiceForm({
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
                     </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            {/* Machine */}
+            <Field>
+              <FieldLabel>Machine</FieldLabel>
+              <Select onValueChange={(value: string | null) => setMachineId(value ?? '')} value={machineId || 'none'}>
+                <SelectTrigger>
+                  <SelectValue placeholder="No machine">
+                    {(value: string) => {
+                      if (!value || value === 'none') return 'No machine';
+                      return machines.find((m) => m.id === value)?.name ?? value;
+                    }}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No machine</SelectItem>
+                  {machines.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -66,6 +66,7 @@ export default function ServicesPage() {
           limit={limit}
           onPageChange={setPage}
           onRowClick={(id) => router.push(`/dashboard/services/${id}`)}
+          onDelete={() => fetchServices()}
           loading={loading}
         />
       )}

@@ -20,8 +20,18 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Plus } from "@phosphor-icons/react";
 import { toastSuccess, toastError } from "@/lib/toast-utils";
 import { useMachineTypes } from "@/lib/use-machine-types";
+
+const COLOR_DOTS: Record<string, string> = {
+  blue: "bg-blue-500",
+  amber: "bg-amber-500",
+  emerald: "bg-emerald-500",
+  purple: "bg-purple-500",
+  red: "bg-red-500",
+  slate: "bg-slate-500",
+};
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,7 +70,7 @@ export function MachineForm({
   onSuccess,
 }: MachineFormProps) {
   const isEdit = !!machine;
-  const { config: typeConfig, options: typeOptions, refetch: refetchTypes } = useMachineTypes();
+  const { config: typeConfig, options: typeOptions, refetch: refetchTypes, customTypes, deleteType } = useMachineTypes();
 
   // Form state
   const [name, setName] = useState("");
@@ -73,28 +83,22 @@ export function MachineForm({
 
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; host?: string }>({});
-  const [showNewType, setShowNewType] = useState(false);
+
+  // New type dialog
+  const [typeDialogOpen, setTypeDialogOpen] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
   const [newTypeColor, setNewTypeColor] = useState("blue");
-  const [addingType, setAddingType] = useState(false);
 
   const handleAddType = useCallback(async () => {
     if (!newTypeName.trim()) return;
-    setAddingType(true);
-    try {
-      await fetch("/api/machine-types", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newTypeName.trim(), color: newTypeColor }),
-      });
-      setNewTypeName("");
-      setShowNewType(false);
-      refetchTypes();
-    } catch {
-      // silently fail
-    } finally {
-      setAddingType(false);
-    }
+    await fetch("/api/machine-types", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newTypeName.trim(), color: newTypeColor }),
+    });
+    setNewTypeName("");
+    setTypeDialogOpen(false);
+    refetchTypes();
   }, [newTypeName, newTypeColor, refetchTypes]);
 
   // Reset form whenever dialog opens or machine changes
@@ -244,80 +248,106 @@ export function MachineForm({
             {/* Type */}
             <Field>
               <FieldLabel>Type</FieldLabel>
-              <Select
-                onValueChange={(value: string | null) =>
-                  setType(value ?? "vps")
-                }
-                value={type}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type">
-                    {(value: string) => {
-                      return typeOptions.find((o) => o.value === value)?.label ?? value;
-                    }}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {typeOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      <span className="flex items-center gap-2">
-                        <span
-                          className={`inline-block size-2 shrink-0 rounded-full ${typeConfig[opt.value]?.dotColor ?? "bg-muted-foreground"}`}
-                        />
-                        {opt.label}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {!showNewType ? (
-                <button
-                  type="button"
-                  className="text-xs text-muted-foreground hover:text-foreground cursor-pointer mt-1"
-                  onClick={() => setShowNewType(true)}
+              <div className="flex items-center gap-2">
+                <Select
+                  onValueChange={(value: string | null) =>
+                    setType(value ?? "vps")
+                  }
+                  value={type}
                 >
-                  + New type
-                </button>
-              ) : (
-                <div className="flex items-center gap-2 mt-1">
-                  <input
-                    type="text"
-                    value={newTypeName}
-                    onChange={(e) => setNewTypeName(e.target.value)}
-                    placeholder="Type name"
-                    className="h-7 w-28 rounded border border-input bg-background px-2 text-xs outline-none focus:border-ring"
-                    autoFocus
-                  />
-                  <select
-                    value={newTypeColor}
-                    onChange={(e) => setNewTypeColor(e.target.value)}
-                    className="h-7 rounded border border-input bg-background px-1 text-xs outline-none"
-                  >
-                    <option value="blue">Blue</option>
-                    <option value="amber">Amber</option>
-                    <option value="emerald">Emerald</option>
-                    <option value="purple">Purple</option>
-                    <option value="red">Red</option>
-                    <option value="slate">Slate</option>
-                  </select>
-                  <button
-                    type="button"
-                    className="text-xs text-primary hover:underline cursor-pointer"
-                    onClick={handleAddType}
-                    disabled={addingType || !newTypeName.trim()}
-                  >
-                    {addingType ? "..." : "Add"}
-                  </button>
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                    onClick={() => { setShowNewType(false); setNewTypeName(""); }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select type">
+                      {(value: string) => {
+                        return typeOptions.find((o) => o.value === value)?.label ?? value;
+                      }}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {typeOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        <span className="flex flex-1 items-center gap-2">
+                          <span
+                            className={`inline-block size-2 shrink-0 rounded-full ${typeConfig[opt.value]?.dotColor ?? "bg-muted-foreground"}`}
+                          />
+                          {opt.label}
+                        </span>
+                        {opt.isCustom && (
+                          <button
+                            type="button"
+                            className="ml-auto cursor-pointer rounded p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (opt.id) deleteType(opt.id);
+                            }}
+                          >
+                            <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                              <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => {
+                    setNewTypeName("");
+                    setNewTypeColor("blue");
+                    setTypeDialogOpen(true);
+                  }}
+                >
+                  <Plus className="size-3.5" />
+                  New
+                </Button>
+              </div>
             </Field>
+
+            {/* New Type Dialog */}
+            <Dialog open={typeDialogOpen} onOpenChange={setTypeDialogOpen}>
+              <DialogPopup>
+                <DialogHeader>
+                  <DialogTitle>New Machine Type</DialogTitle>
+                </DialogHeader>
+                <DialogPanel>
+                  <div className="flex flex-col gap-4">
+                    <Field>
+                      <FieldLabel>Name</FieldLabel>
+                      <Input
+                        value={newTypeName}
+                        onChange={(e) => setNewTypeName(e.target.value)}
+                        placeholder="e.g. Proxmox"
+                        autoFocus
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Color</FieldLabel>
+                      <div className="flex gap-2">
+                        {(["blue", "amber", "emerald", "purple", "red", "slate"] as const).map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            className={`size-7 cursor-pointer rounded-full border-2 ${newTypeColor === c ? "border-ring" : "border-transparent"} ${COLOR_DOTS[c]}`}
+                            onClick={() => setNewTypeColor(c)}
+                          />
+                        ))}
+                      </div>
+                    </Field>
+                  </div>
+                </DialogPanel>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setTypeDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddType} disabled={!newTypeName.trim()}>
+                    Create
+                  </Button>
+                </DialogFooter>
+              </DialogPopup>
+            </Dialog>
 
             {/* CPU Cores */}
             <Field>

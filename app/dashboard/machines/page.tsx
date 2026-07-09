@@ -102,6 +102,22 @@ export default function MachinesPage() {
     fetchMachines();
   }, [fetchMachines]);
 
+  // Auto-ping all machines every 60s
+  useEffect(() => {
+    const pingAll = async () => {
+      const res = await fetch("/api/machines");
+      const json = await res.json();
+      const list = json.data?.machines ?? [];
+      for (const m of list) {
+        fetch(`/api/machines/${m.id}/ping`, { method: "POST" }).catch(() => {});
+      }
+      fetchMachines();
+    };
+    pingAll();
+    const interval = setInterval(pingAll, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchMachines]);
+
   // -----------------------------------------------------------------------
   // Debounced search
   // -----------------------------------------------------------------------

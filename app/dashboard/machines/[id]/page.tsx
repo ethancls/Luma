@@ -224,12 +224,14 @@ export default function MachineDetailPage() {
         </Button>
 
         <AlertDialog>
-          <AlertDialogTrigger>
-            <Button variant="destructive-outline" size="sm">
-              <Trash className="size-4" />
-              Delete
-            </Button>
-          </AlertDialogTrigger>
+          <AlertDialogTrigger
+            render={
+              <Button variant="destructive-outline" size="sm">
+                <Trash className="size-4" />
+                Delete
+              </Button>
+            }
+          />
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Machine</AlertDialogTitle>
@@ -239,11 +241,13 @@ export default function MachineDetailPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogClose>
-                <Button variant="outline" size="sm">
-                  Cancel
-                </Button>
-              </AlertDialogClose>
+              <AlertDialogClose
+                render={
+                  <Button variant="outline" size="sm">
+                    Cancel
+                  </Button>
+                }
+              />
               <Button
                 variant="destructive"
                 size="sm"

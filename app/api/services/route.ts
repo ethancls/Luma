@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { auth } from '@/lib/auth';
 import { logAudit } from '@/lib/audit';
 import { getServices, createService } from '@/lib/services';
+import { db } from '@/lib/db';
+import { serviceMachine } from '@/db/schema';
+import { v4 as uuid } from 'uuid';
 
 const createSchema = z.object({
   name: z.string().min(1),
@@ -10,6 +13,7 @@ const createSchema = z.object({
   port: z.number().int().optional(),
   description: z.string().optional(),
   categoryId: z.string().optional(),
+  machineId: z.string().optional(),
   tags: z.array(z.string()).optional(),
   dockerComposeSnippet: z.string().optional(),
   notes: z.string().optional(),
@@ -47,7 +51,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const service = await createService(parsed.data);
+  const { machineId, ...serviceData } = parsed.data;
+  const service = await createService(serviceData);
+
+  if (machineId) {
+    await db.insert(serviceMachine).values({ serviceId: service!.id, machineId });
+  }
 
   await logAudit({
     userId,
