@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,17 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<{ name?: string; email?: string; image?: string } | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/session').then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.user) setUser(d.user);
+    }).catch(() => {});
+  }, []);
+
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : user?.email?.[0]?.toUpperCase() || '?';
 
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault();
@@ -69,12 +80,12 @@ export default function SettingsPage() {
         <Separator className="my-4" />
         <div className="flex items-center gap-4">
           <Avatar className="size-16">
-            <AvatarImage src="" />
-            <AvatarFallback className="text-lg">?</AvatarFallback>
+            <AvatarImage src={user?.image || ''} />
+            <AvatarFallback className="text-lg">{initials}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">Account</p>
-            <p className="text-sm text-muted-foreground">Signed in</p>
+            <p className="font-medium">{user?.name || 'Account'}</p>
+            <p className="text-sm text-muted-foreground">{user?.email || 'Signed in'}</p>
           </div>
         </div>
       </div>

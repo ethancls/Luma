@@ -174,7 +174,11 @@ export function ServiceLogsTable({ serviceId }: ServiceLogsTableProps) {
         <span className="text-sm text-muted-foreground">Level:</span>
         <Select onValueChange={handleLevelChange} value={level}>
           <SelectTrigger className="w-[140px]">
-            <SelectValue />
+            <SelectValue>
+              {(value: string) => {
+                return LEVEL_OPTIONS.find((o) => o.value === value)?.label ?? value;
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {LEVEL_OPTIONS.map((opt) => (

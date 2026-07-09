@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef, type ComponentProps } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Plus } from "@phosphor-icons/react";
+import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { MachineTable } from "@/components/machines/machine-table";
 import { MachineForm } from "@/components/machines/machine-form";
-import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -153,7 +153,12 @@ export default function MachinesPage() {
       <div className="flex flex-wrap items-center gap-3">
         <Select onValueChange={handleStatusChange} value={status || "all"}>
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="All Statuses" />
+            <SelectValue placeholder="All Statuses">
+              {(value: string) => {
+                if (!value || value === "all") return "All Statuses";
+                return STATUS_OPTIONS.find((o) => o.value === value)?.label ?? value;
+              }}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
@@ -165,13 +170,17 @@ export default function MachinesPage() {
           </SelectContent>
         </Select>
 
-        <Input
-          className="w-[220px]"
-          placeholder="Search machines..."
-          type="search"
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-        />
+        <InputGroup className="w-[220px]">
+          <InputGroupAddon>
+            <MagnifyingGlass className="size-4" />
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder="Search machines..."
+            type="search"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+        </InputGroup>
 
         <div className="flex-1" />
 

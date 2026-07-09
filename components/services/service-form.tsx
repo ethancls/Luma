@@ -299,7 +299,12 @@ export function ServiceForm({
                 value={categoryId || "none"}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="No category" />
+                  <SelectValue placeholder="No category">
+                    {(value: string) => {
+                      if (!value || value === "none") return "No category";
+                      return categories.find((c) => c.id === value)?.name ?? value;
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No category</SelectItem>

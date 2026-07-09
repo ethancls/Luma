@@ -237,7 +237,11 @@ export function MachineForm({
                 value={type}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder="Select type">
+                    {(value: string) => {
+                      return TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {TYPE_OPTIONS.map((opt) => (
