@@ -2,10 +2,9 @@ import * as net from 'node:net';
 import type { DiscoveredService } from './index';
 
 const DEFAULT_PORTS = [80, 443, 8080, 8443, 3000];
+const CONCURRENCY = 50;
 
 function parseRange(range: string): string[] {
-  // Supports CIDR ranges via simple last-octet expansion, e.g. "192.168.1.1-254"
-  // Also supports single IPs.
   const trimmed = range.trim();
 
   // Single IP
@@ -26,7 +25,6 @@ function parseRange(range: string): string[] {
     return hosts;
   }
 
-  console.error(`Unsupported range format: ${range}`);
   return [];
 }
 
@@ -51,61 +49,54 @@ function tcpProbe(ip: string, port: number, timeoutMs: number): Promise<boolean>
   });
 }
 
-async function httpProbe(ip: string, port: number): Promise<{ name: string; tags: string[] } | null> {
+async function httpProbe(ip: string, port: number): Promise<DiscoveredService | null> {
   const protocol = port === 443 || port === 8443 ? 'https' : 'http';
   const url = `${protocol}://${ip}:${port}`;
 
   try {
     const res = await fetch(url, {
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(2000),
       redirect: 'follow',
     });
 
-    // Try to extract a title or server header
     let name = `${ip}:${port}`;
     const server = res.headers.get('server');
-    if (server) {
-      name = `${server} (${ip}:${port})`;
-    }
+    if (server) name = server.split('/')[0].trim();
 
-    const tags: string[] = [];
-    tags.push(protocol);
+    const tags: string[] = [protocol];
     if (res.status >= 200 && res.status < 400) tags.push('responding');
 
-    // Check for common service signatures
-    const body = await res.text().catch(() => '');
-    if (body.includes('Traefik')) tags.push('traefik');
-    if (body.includes('Portainer')) tags.push('portainer');
-    if (body.includes('Proxmox')) tags.push('proxmox');
-
-    return { name, tags };
+    return { name, url, port, tags, source: 'scan' };
   } catch {
-    // Port open but HTTP probe failed — still report something
-    return { name: `${ip}:${port}`, tags: [protocol] };
+    return { name: `${ip}:${port}`, url, port, tags: [protocol], source: 'scan' };
   }
 }
 
 export async function discoverScan(config: { range: string; ports?: number[] }): Promise<DiscoveredService[]> {
   const hosts = parseRange(config.range);
   const ports = config.ports ?? DEFAULT_PORTS;
-  const timeoutMs = 2000;
   const found: DiscoveredService[] = [];
 
+  // Generate all host:port pairs
+  const targets: { host: string; port: number }[] = [];
   for (const host of hosts) {
     for (const port of ports) {
-      const open = await tcpProbe(host, port, timeoutMs);
-      if (!open) continue;
+      targets.push({ host, port });
+    }
+  }
 
-      const probe = await httpProbe(host, port);
-      if (!probe) continue;
-
-      found.push({
-        name: probe.name,
-        url: `${port === 443 || port === 8443 ? 'https' : 'http'}://${host}:${port}`,
-        port,
-        tags: probe.tags,
-        source: 'scan',
-      });
+  // Probe in parallel with concurrency limit
+  for (let i = 0; i < targets.length; i += CONCURRENCY) {
+    const batch = targets.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(
+      batch.map(async ({ host, port }) => {
+        const open = await tcpProbe(host, port, 800);
+        if (!open) return null;
+        return httpProbe(host, port);
+      })
+    );
+    for (const r of results) {
+      if (r) found.push(r);
     }
   }
 

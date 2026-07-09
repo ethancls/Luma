@@ -8,7 +8,7 @@ import { toastSuccess, toastError } from '@/lib/toast-utils';
 
 const defaultConfigs: Record<string, Record<string, unknown>> = {
   traefik: { url: 'http://localhost:8080' },
-  docker: { host: 'unix:///var/run/docker.sock' },
+  docker: { host: 'http://localhost:2375' },
   scan: { range: '192.168.1.1-254', ports: [80, 443, 3000, 8080, 8443] },
 };
 
@@ -63,7 +63,10 @@ export default function DiscoverySettingsPage() {
       setProgress(80);
       const json = await res.json();
 
-      if (!res.ok) throw new Error(json.error || 'Sync failed');
+      if (!res.ok) {
+        const errMsg = typeof json.error === 'string' ? json.error : JSON.stringify(json.error);
+        throw new Error(errMsg || `Sync failed (${res.status})`);
+      }
 
       setProgress(100);
       log(`Done — ${json.data.found} services, ${json.data.new} new, ${json.data.updated} updated`);
@@ -122,7 +125,7 @@ export default function DiscoverySettingsPage() {
                     </span>
                   )}
                   {error && !syncing && (
-                    <span className="text-xs text-red-500">Failed</span>
+                    <span className="text-xs text-red-500" title={error}>{error.length > 60 ? error.slice(0, 60) + '...' : error}</span>
                   )}
                   <Button
                     size="sm"
