@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { HardDrive } from "@phosphor-icons/react";
+import { CloudSlashIcon } from "@phosphor-icons/react";
 import {
   Table,
   TableHeader,
@@ -169,7 +169,7 @@ export function ServiceTable({
       <Empty>
         <EmptyHeader>
           <EmptyMedia variant="icon">
-            <HardDrive className="size-6 text-foreground" />
+            <CloudSlashIcon className="size-6 text-foreground" />
           </EmptyMedia>
           <EmptyTitle>No services found</EmptyTitle>
           <EmptyDescription>

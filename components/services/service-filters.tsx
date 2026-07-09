@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { Plus } from "@phosphor-icons/react";
-import { Input } from "@/components/ui/input";
+import { MagnifyingGlass, Plus } from "@phosphor-icons/react";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -148,7 +148,12 @@ export function ServiceFilters({
         value={categoryId || "all"}
       >
         <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="All Categories" />
+          <SelectValue placeholder="All Categories">
+            {(value: string) => {
+              if (!value || value === "all") return "All Categories";
+              return categories.find((c) => c.id === value)?.name ?? value;
+            }}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Categories</SelectItem>
@@ -165,7 +170,12 @@ export function ServiceFilters({
         value={status || "all"}
       >
         <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="All Statuses" />
+          <SelectValue placeholder="All Statuses">
+            {(value: string) => {
+              if (!value || value === "all") return "All Statuses";
+              return STATUS_OPTIONS.find((o) => o.value === value)?.label ?? value;
+            }}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Statuses</SelectItem>
@@ -177,13 +187,17 @@ export function ServiceFilters({
         </SelectContent>
       </Select>
 
-      <Input
-        className="w-[220px]"
-        placeholder="Search services..."
-        type="search"
-        value={search}
-        onChange={(e) => handleSearchChange(e.target.value)}
-      />
+      <InputGroup className="w-[220px]">
+        <InputGroupAddon>
+          <MagnifyingGlass className="size-4" />
+        </InputGroupAddon>
+        <InputGroupInput
+          placeholder="Search services..."
+          type="search"
+          value={search}
+          onChange={(e) => handleSearchChange(e.target.value)}
+        />
+      </InputGroup>
 
       <div className="flex-1" />
 
