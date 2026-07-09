@@ -27,9 +27,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           user={user ? { name: user.name, email: user.email, image: avatarUrl } : null}
         />
 
-        <div className="flex flex-1 pt-16">
+        <div className="flex min-h-0 flex-1 pt-16">
           <AppSidebar hideOnMobile />
-          <main className="flex-1 overflow-auto p-6">{children}</main>
+          <main className="min-h-0 flex-1 overflow-auto p-6">{children}</main>
         </div>
       </div>
     </SidebarContextProvider>

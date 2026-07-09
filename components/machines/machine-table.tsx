@@ -210,7 +210,7 @@ export function MachineTable({
               <TableCell className="text-muted-foreground/50">
                 &mdash;
               </TableCell>
-              <TableCell className="text-muted-foreground text-xs">
+              <TableCell className="text-muted-foreground text-sm">
                 {formatRelativeTime(machine.lastSeen)}
               </TableCell>
             </TableRow>
