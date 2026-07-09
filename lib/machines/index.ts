@@ -70,12 +70,13 @@ export async function deleteMachine(id: string) {
 }
 
 // Get logs for a machine
-export async function getMachineLogs(machineId: string, opts: { level?: string; page?: number; limit?: number } = {}) {
-  const { level, page = 1, limit = 20 } = opts;
+export async function getMachineLogs(machineId: string, opts: { level?: string; source?: string; page?: number; limit?: number } = {}) {
+  const { level, source, page = 1, limit = 20 } = opts;
   const offset = (page - 1) * limit;
 
   const conditions = [eq(machineLogs.machineId, machineId)];
   if (level) conditions.push(eq(machineLogs.level, level as any));
+  if (source) conditions.push(eq(machineLogs.source, source as any));
 
   const [rows, totalResult] = await Promise.all([
     db.select().from(machineLogs).where(and(...conditions)).orderBy(desc(machineLogs.createdAt)).limit(limit).offset(offset),

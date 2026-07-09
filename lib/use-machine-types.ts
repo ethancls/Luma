@@ -23,6 +23,12 @@ const COLOR_PRESETS: Record<string, { className: string; dotColor: string }> = {
   purple: { className: "bg-purple-50 text-purple-700 dark:bg-purple-400/10 dark:text-purple-300", dotColor: "bg-purple-500" },
   red: { className: "bg-red-50 text-red-700 dark:bg-red-400/10 dark:text-red-300", dotColor: "bg-red-500" },
   slate: { className: "bg-slate-50 text-slate-700 dark:bg-slate-400/10 dark:text-slate-300", dotColor: "bg-slate-500" },
+  cyan: { className: "bg-cyan-50 text-cyan-700 dark:bg-cyan-400/10 dark:text-cyan-300", dotColor: "bg-cyan-500" },
+  pink: { className: "bg-pink-50 text-pink-700 dark:bg-pink-400/10 dark:text-pink-300", dotColor: "bg-pink-500" },
+  indigo: { className: "bg-indigo-50 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-300", dotColor: "bg-indigo-500" },
+  teal: { className: "bg-teal-50 text-teal-700 dark:bg-teal-400/10 dark:text-teal-300", dotColor: "bg-teal-500" },
+  orange: { className: "bg-orange-50 text-orange-700 dark:bg-orange-400/10 dark:text-orange-300", dotColor: "bg-orange-500" },
+  lime: { className: "bg-lime-50 text-lime-700 dark:bg-lime-400/10 dark:text-lime-300", dotColor: "bg-lime-500" },
 };
 
 const BUILT_IN: Record<string, TypeConfig> = {

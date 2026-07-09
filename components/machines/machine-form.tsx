@@ -25,13 +25,13 @@ import { toastSuccess, toastError } from "@/lib/toast-utils";
 import { useMachineTypes } from "@/lib/use-machine-types";
 
 const COLOR_DOTS: Record<string, string> = {
-  blue: "bg-blue-500",
-  amber: "bg-amber-500",
-  emerald: "bg-emerald-500",
-  purple: "bg-purple-500",
-  red: "bg-red-500",
-  slate: "bg-slate-500",
+  blue: "bg-blue-500", amber: "bg-amber-500", emerald: "bg-emerald-500",
+  purple: "bg-purple-500", red: "bg-red-500", slate: "bg-slate-500",
+  cyan: "bg-cyan-500", pink: "bg-pink-500", indigo: "bg-indigo-500",
+  teal: "bg-teal-500", orange: "bg-orange-500", lime: "bg-lime-500",
 };
+
+const ALL_COLORS = Object.keys(COLOR_DOTS);
 
 // ---------------------------------------------------------------------------
 // Types
@@ -248,7 +248,7 @@ export function MachineForm({
             {/* Type */}
             <Field>
               <FieldLabel>Type</FieldLabel>
-              <div className="flex items-center gap-2">
+              <div className="flex gap-2">
                 <Select
                   onValueChange={(value: string | null) =>
                     setType(value ?? "vps")
@@ -265,26 +265,29 @@ export function MachineForm({
                   <SelectContent>
                     {typeOptions.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
-                        <span className="flex flex-1 items-center gap-2">
+                        <span className="flex items-center gap-2">
                           <span
                             className={`inline-block size-2 shrink-0 rounded-full ${typeConfig[opt.value]?.dotColor ?? "bg-muted-foreground"}`}
                           />
-                          {opt.label}
+                          <span className="flex-1">{opt.label}</span>
+                          {opt.isCustom && (
+                            <button
+                              type="button"
+                              className="shrink-0 cursor-pointer rounded p-0.5 text-muted-foreground hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                if (opt.id && confirm(`Delete type "${opt.label}"?`)) {
+                                  deleteType(opt.id);
+                                }
+                              }}
+                            >
+                              <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                <path d="M18 6L6 18M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
                         </span>
-                        {opt.isCustom && (
-                          <button
-                            type="button"
-                            className="ml-auto cursor-pointer rounded p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (opt.id) deleteType(opt.id);
-                            }}
-                          >
-                            <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                              <path d="M18 6L6 18M6 6l12 12" />
-                            </svg>
-                          </button>
-                        )}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -325,12 +328,13 @@ export function MachineForm({
                     </Field>
                     <Field>
                       <FieldLabel>Color</FieldLabel>
-                      <div className="flex gap-2">
-                        {(["blue", "amber", "emerald", "purple", "red", "slate"] as const).map((c) => (
+                      <div className="flex flex-wrap gap-2">
+                        {ALL_COLORS.map((c) => (
                           <button
                             key={c}
                             type="button"
-                            className={`size-7 cursor-pointer rounded-full border-2 ${newTypeColor === c ? "border-ring" : "border-transparent"} ${COLOR_DOTS[c]}`}
+                            title={c}
+                            className={`size-7 cursor-pointer rounded-full border-2 transition-shadow ${newTypeColor === c ? "border-ring ring-2 ring-ring/30" : "border-transparent"} ${COLOR_DOTS[c]}`}
                             onClick={() => setNewTypeColor(c)}
                           />
                         ))}

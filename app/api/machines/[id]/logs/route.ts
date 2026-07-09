@@ -13,11 +13,12 @@ export async function GET(
 
   const { searchParams } = new URL(req.url);
   const level = searchParams.get('level') ?? undefined;
+  const source = searchParams.get('source') ?? undefined;
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const limit = parseInt(searchParams.get('limit') ?? '20', 10);
 
   try {
-    const result = await getMachineLogs(id, { level, page, limit });
+    const result = await getMachineLogs(id, { level, source, page, limit });
 
     return NextResponse.json({ data: result });
   } catch (error) {

@@ -66,6 +66,14 @@ export default function ServicesPage() {
           limit={limit}
           onPageChange={setPage}
           onRowClick={(id) => router.push(`/dashboard/services/${id}`)}
+          onEdit={async (id) => {
+            const res = await fetch(`/api/services/${id}`);
+            if (res.ok) {
+              const json = await res.json();
+              setEditingService(json.data);
+              setFormOpen(true);
+            }
+          }}
           onDelete={() => fetchServices()}
           loading={loading}
         />

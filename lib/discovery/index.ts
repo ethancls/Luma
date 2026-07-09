@@ -39,13 +39,27 @@ export async function runDiscovery(
   for (const svc of found) {
     const existing = await db.select().from(services).where(eq(services.name, svc.name)).limit(1);
     if (existing.length === 0) {
+      const serviceId = uuid();
       await db.insert(services).values({
-        id: uuid(),
+        id: serviceId,
         name: svc.name,
         url: svc.url,
         port: svc.port,
         tags: svc.tags,
       });
+
+      // Auto-link to machine by IP match
+      if (svc.url) {
+        try {
+          const url = new URL(svc.url);
+          const ip = url.hostname;
+          const matched = await db.select().from(machines).where(eq(machines.host, ip)).limit(1);
+          if (matched[0]) {
+            await db.insert(serviceMachine).values({ serviceId, machineId: matched[0].id });
+          }
+        } catch {}
+      }
+
       newCount++;
     }
   }

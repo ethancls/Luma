@@ -5,7 +5,7 @@ import { getMachineTypes, createMachineType } from "@/lib/machine-types-db";
 
 const createSchema = z.object({
   name: z.string().min(1),
-  color: z.enum(["blue", "amber", "emerald", "purple", "red", "slate"]),
+  color: z.enum(["blue", "amber", "emerald", "purple", "red", "slate", "cyan", "pink", "indigo", "teal", "orange", "lime"]),
 });
 
 export async function GET() {

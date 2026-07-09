@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from 'react';
-import { HardDrive, Trash } from '@phosphor-icons/react';
+import { HardDrive, DotsThree, PencilSimple, Trash } from '@phosphor-icons/react';
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Menu, MenuTrigger, MenuPopup, MenuItem, MenuSeparator } from '@/components/ui/menu';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationPrevious, PaginationNext } from '@/components/ui/pagination';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogClose } from '@/components/ui/alert-dialog';
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from '@/components/ui/empty';
 import { LoadingTable } from '@/components/shared/loading-table';
 import { toastSuccess, toastError } from '@/lib/toast-utils';
 
@@ -28,6 +30,7 @@ interface ServiceTableProps {
   limit: number;
   onPageChange: (page: number) => void;
   onRowClick: (id: string) => void;
+  onEdit?: (id: string) => void;
   onDelete: (id: string) => void;
   loading?: boolean;
 }
@@ -65,10 +68,33 @@ function getVisiblePages(page: number, totalPages: number): (number | 'ellipsis'
   return pages;
 }
 
-export function ServiceTable({ services, total, page, limit, onPageChange, onRowClick, onDelete, loading }: ServiceTableProps) {
+export function ServiceTable({ services, total, page, limit, onPageChange, onRowClick, onEdit, onDelete, loading }: ServiceTableProps) {
   const totalPages = Math.max(1, Math.ceil(total / limit));
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  if (loading) return <LoadingTable rows={8} cols={5} />;
+  const allSelected = services.length > 0 && services.every(s => selected.has(s.id));
+  const someSelected = selected.size > 0;
+
+  function toggleAll() {
+    if (allSelected) { setSelected(new Set()); }
+    else { setSelected(new Set(services.map(s => s.id))); }
+  }
+
+  function toggleOne(id: string) {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelected(next);
+  }
+
+  async function deleteSelected() {
+    for (const id of selected) {
+      try { await fetch(`/api/services/${id}`, { method: 'DELETE' }); onDelete(id); } catch {}
+    }
+    toastSuccess('Deleted', `${selected.size} service(s) deleted`);
+    setSelected(new Set());
+  }
+
+  if (loading) return <LoadingTable rows={8} cols={6} />;
 
   if (services.length === 0) {
     return (
@@ -84,20 +110,49 @@ export function ServiceTable({ services, total, page, limit, onPageChange, onRow
 
   return (
     <div className="space-y-4">
+      {/* Bulk actions */}
+      {someSelected && (
+        <div className="flex items-center gap-3 rounded-lg border bg-accent/30 px-4 py-2">
+          <span className="text-sm font-medium">{selected.size} selected</span>
+          <AlertDialog>
+            <AlertDialogTrigger>
+              <Button variant="destructive-outline" size="xs">Delete selected</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete {selected.size} service(s)?</AlertDialogTitle>
+                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogClose><Button variant="outline" size="sm">Cancel</Button></AlertDialogClose>
+                <Button variant="destructive" size="sm" onClick={deleteSelected}>Delete</Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <Button variant="ghost" size="xs" onClick={() => setSelected(new Set())}>Clear</Button>
+        </div>
+      )}
+
       <Table variant="card">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-12" />
+            <TableHead className="w-10">
+              <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+            </TableHead>
+            <TableHead className="w-10" />
             <TableHead>Name</TableHead>
             <TableHead className="hidden sm:table-cell">URL</TableHead>
-            <TableHead className="hidden md:table-cell">Tags</TableHead>
+            <TableHead className="hidden lg:table-cell">Tags</TableHead>
             <TableHead className="hidden sm:table-cell w-[100px]">Last Check</TableHead>
-            <TableHead className="w-[60px]" />
+            <TableHead className="w-10" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {services.map((service) => (
-            <TableRow key={service.id}>
+            <TableRow key={service.id} className={selected.has(service.id) ? 'bg-accent/50' : undefined}>
+              <TableCell>
+                <Checkbox checked={selected.has(service.id)} onCheckedChange={() => toggleOne(service.id)} />
+              </TableCell>
               <TableCell className="text-center">
                 <StatusDot status={service.status} />
               </TableCell>
@@ -112,60 +167,57 @@ export function ServiceTable({ services, total, page, limit, onPageChange, onRow
               <TableCell className="hidden max-w-[180px] truncate text-sm text-muted-foreground sm:table-cell">
                 {service.url || <span className="text-muted-foreground/40">—</span>}
               </TableCell>
-              <TableCell className="hidden md:table-cell">
+              <TableCell className="hidden lg:table-cell">
                 <div className="flex flex-wrap gap-1">
                   {service.tags.length === 0 && <span className="text-xs text-muted-foreground/40">—</span>}
-                  {service.tags.slice(0, 3).map((tag) => (
+                  {service.tags.map((tag) => (
                     <Badge key={tag} variant="secondary">{tag}</Badge>
                   ))}
-                  {service.tags.length > 3 && (
-                    <Badge variant="outline">+{service.tags.length - 3}</Badge>
-                  )}
                 </div>
               </TableCell>
               <TableCell className="hidden text-sm text-muted-foreground sm:table-cell">
                 {formatTime(service.lastChecked)}
               </TableCell>
               <TableCell>
-                <AlertDialog>
-                  <AlertDialogTrigger>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      className="text-muted-foreground hover:text-red-500"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Trash className="size-3.5" />
+                <Menu>
+                  <MenuTrigger>
+                    <Button variant="ghost" size="icon-xs" className="text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+                      <DotsThree className="size-4" />
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete {service.name}?</AlertDialogTitle>
-                      <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogClose>
-                        <Button variant="outline" size="sm">Cancel</Button>
-                      </AlertDialogClose>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            const res = await fetch(`/api/services/${service.id}`, { method: 'DELETE' });
-                            if (!res.ok) throw new Error();
-                            toastSuccess('Deleted', service.name);
-                            onDelete(service.id);
-                          } catch {
-                            toastError('Failed', 'Could not delete service');
-                          }
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                  </MenuTrigger>
+                  <MenuPopup align="end" className="w-36">
+                    <MenuItem className="cursor-pointer" onClick={(e) => { e.stopPropagation(); onEdit?.(service.id); }}>
+                      <PencilSimple className="size-4" />
+                      Edit
+                    </MenuItem>
+                    <MenuSeparator />
+                    <AlertDialog>
+                      <AlertDialogTrigger>
+                        <MenuItem className="cursor-pointer text-red-500" onClick={(e) => e.stopPropagation()}>
+                          <Trash className="size-4" />
+                          Delete
+                        </MenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete {service.name}?</AlertDialogTitle>
+                          <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogClose><Button variant="outline" size="sm">Cancel</Button></AlertDialogClose>
+                          <Button variant="destructive" size="sm" onClick={async () => {
+                            try {
+                              const res = await fetch(`/api/services/${service.id}`, { method: 'DELETE' });
+                              if (!res.ok) throw new Error();
+                              toastSuccess('Deleted', service.name);
+                              onDelete(service.id);
+                            } catch { toastError('Failed', 'Could not delete service'); }
+                          }}>Delete</Button>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </MenuPopup>
+                </Menu>
               </TableCell>
             </TableRow>
           ))}

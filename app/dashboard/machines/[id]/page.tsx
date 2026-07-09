@@ -68,6 +68,60 @@ function StatusDot({ status }: { status: string }) {
 
 import { useMachineTypes } from "@/lib/use-machine-types";
 
+function PingSparkline({ machineId }: { machineId: string }) {
+  const [points, setPoints] = useState<number[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/machines/${machineId}/logs?source=ping&limit=60`)
+      .then((r) => r.json())
+      .then((json) => {
+        const logs = json.data?.logs ?? [];
+        const latencies = logs
+          .map((l: any) => (l.metadata && typeof l.metadata === "object" ? (l.metadata as any).latency : null))
+          .filter((v: any): v is number => typeof v === "number")
+          .reverse();
+        setPoints(latencies);
+      })
+      .catch(() => {});
+  }, [machineId]);
+
+  if (points.length < 2) return null;
+
+  const w = 300;
+  const h = 40;
+  const pad = 2;
+  const max = Math.max(...points, 1);
+  const min = Math.min(...points, 0);
+  const range = max - min || 1;
+  const stepX = (w - pad * 2) / (points.length - 1);
+
+  const line = points
+    .map((v, i) => {
+      const x = pad + i * stepX;
+      const y = pad + h - pad * 2 - ((v - min) / range) * (h - pad * 4);
+      return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  const area = `${line} L ${pad + (points.length - 1) * stepX} ${h - pad} L ${pad} ${h - pad} Z`;
+
+  return (
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <span>Latency (60s)</span>
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-10 w-[300px]">
+        <path d={area} fill="url(#pingGrad)" />
+        <path d={line} fill="none" stroke="var(--color-primary,#3A88FE)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <defs>
+          <linearGradient id="pingGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-primary,#3A88FE)" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="var(--color-primary,#3A88FE)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  );
+}
+
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "Never";
   const date = new Date(dateStr);
@@ -217,6 +271,16 @@ export default function MachineDetailPage() {
         <Button
           variant="outline"
           size="sm"
+          onClick={handlePing}
+          disabled={pinging}
+        >
+          <ArrowClockwise className={`size-4 ${pinging ? "animate-spin" : ""}`} />
+          {pinging ? "Pinging..." : "Ping"}
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setFormOpen(true)}
         >
           <PencilSimple className="size-4" />
@@ -273,17 +337,15 @@ export default function MachineDetailPage() {
         <span className="text-sm text-muted-foreground">
           Last seen: {machine.lastSeen ? formatDate(machine.lastSeen) : "Never"}
         </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handlePing}
-          disabled={pinging}
-          className="gap-1.5"
-        >
-          <ArrowClockwise className={`size-3.5 ${pinging ? "animate-spin" : ""}`} />
-          {pinging ? "Pinging..." : pingResult ? `${pingResult.latency}ms` : "Ping"}
-        </Button>
+        {pingResult && (
+          <span className={`text-sm font-medium ${pingResult.reachable ? "text-emerald-600" : "text-red-500"}`}>
+            {pingResult.reachable ? `${pingResult.latency}ms` : "Unreachable"}
+          </span>
+        )}
       </div>
+
+      {/* Latency sparkline */}
+      <PingSparkline machineId={id} />
 
       {/* Machine info card */}
       <Card>
