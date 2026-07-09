@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, PencilSimple, Trash, DesktopTower, Activity } from "@phosphor-icons/react";
+import { ArrowLeft, PencilSimple, Trash, DesktopTower, ArrowClockwise } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { MachineForm } from "@/components/machines/machine-form";
@@ -66,7 +66,7 @@ function StatusDot({ status }: { status: string }) {
   );
 }
 
-import { MACHINE_TYPE_CONFIG } from "@/lib/machine-types";
+import { useMachineTypes } from "@/lib/use-machine-types";
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "Never";
@@ -93,6 +93,7 @@ export default function MachineDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const { config: typeConfig } = useMachineTypes();
   const [pinging, setPinging] = useState(false);
   const [pingResult, setPingResult] = useState<{ reachable: boolean; latency: number } | null>(null);
 
@@ -261,9 +262,9 @@ export default function MachineDetailPage() {
       <div className="flex items-center gap-3">
         <StatusDot status={machine.status} />
         <span
-          className={`inline-flex shrink-0 items-center rounded-sm px-2.5 py-0.5 text-sm font-medium ring-1 ring-inset ${MACHINE_TYPE_CONFIG[machine.type]?.className ?? ""}`}
+          className={`inline-flex shrink-0 items-center rounded-sm px-2 py-px text-xs font-medium ${typeConfig[machine.type]?.className ?? ""}`}
         >
-          {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
+          {typeConfig[machine.type]?.label || machine.type}
         </span>
         <span className="text-sm text-muted-foreground">
           Last seen: {machine.lastSeen ? formatDate(machine.lastSeen) : "Never"}
@@ -275,7 +276,7 @@ export default function MachineDetailPage() {
           disabled={pinging}
           className="gap-1.5"
         >
-          <Activity className={`size-3.5 ${pinging ? "animate-spin" : ""}`} />
+          <ArrowClockwise className={`size-3.5 ${pinging ? "animate-spin" : ""}`} />
           {pinging ? "Pinging..." : pingResult ? `${pingResult.latency}ms` : "Ping"}
         </Button>
       </div>
@@ -294,9 +295,9 @@ export default function MachineDetailPage() {
             <div>
               <p className="text-xs text-muted-foreground">Type</p>
               <span
-                className={`inline-flex shrink-0 items-center rounded-sm px-2.5 py-0.5 text-sm font-medium ring-1 ring-inset ${MACHINE_TYPE_CONFIG[machine.type]?.className ?? ""}`}
+                className={`inline-flex shrink-0 items-center rounded-sm px-2 py-px text-xs font-medium ${typeConfig[machine.type]?.className ?? ""}`}
               >
-                {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
+                {typeConfig[machine.type]?.label || machine.type}
               </span>
             </div>
             <div>

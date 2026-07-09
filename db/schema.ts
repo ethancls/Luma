@@ -134,15 +134,23 @@ export const machines = sqliteTable('machines', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   host: text('host').notNull(),
-  type: text('type', { enum: ['vps', 'bare-metal', 'pi', 'nas'] }).default('vps').notNull(),
+  type: text('type').default('vps').notNull(),
   cpuCores: integer('cpu_cores'),
   ramGb: integer('ram_gb'),
   diskGb: integer('disk_gb'),
   notes: text('notes'),
   status: text('status', { enum: ['online', 'offline', 'unknown'] }).default('unknown').notNull(),
   lastSeen: integer('last_seen', { mode: 'timestamp' }),
+  latency: integer('latency'),
   createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow().notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).defaultNow().notNull(),
+});
+
+export const machineTypes = sqliteTable('machine_types', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  color: text('color').notNull().default('blue'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow().notNull(),
 });
 
 export const services = sqliteTable('services', {

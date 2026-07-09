@@ -21,7 +21,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toastSuccess, toastError } from "@/lib/toast-utils";
-import { MACHINE_TYPE_CONFIG, MACHINE_TYPE_OPTIONS } from "@/lib/machine-types";
+import { useMachineTypes } from "@/lib/use-machine-types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,6 +60,7 @@ export function MachineForm({
   onSuccess,
 }: MachineFormProps) {
   const isEdit = !!machine;
+  const { config: typeConfig, options: typeOptions, refetch: refetchTypes } = useMachineTypes();
 
   // Form state
   const [name, setName] = useState("");
@@ -72,6 +73,29 @@ export function MachineForm({
 
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ name?: string; host?: string }>({});
+  const [showNewType, setShowNewType] = useState(false);
+  const [newTypeName, setNewTypeName] = useState("");
+  const [newTypeColor, setNewTypeColor] = useState("blue");
+  const [addingType, setAddingType] = useState(false);
+
+  const handleAddType = useCallback(async () => {
+    if (!newTypeName.trim()) return;
+    setAddingType(true);
+    try {
+      await fetch("/api/machine-types", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newTypeName.trim(), color: newTypeColor }),
+      });
+      setNewTypeName("");
+      setShowNewType(false);
+      refetchTypes();
+    } catch {
+      // silently fail
+    } finally {
+      setAddingType(false);
+    }
+  }, [newTypeName, newTypeColor, refetchTypes]);
 
   // Reset form whenever dialog opens or machine changes
   useEffect(() => {
@@ -229,16 +253,16 @@ export function MachineForm({
                 <SelectTrigger>
                   <SelectValue placeholder="Select type">
                     {(value: string) => {
-                      return MACHINE_TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
+                      return typeOptions.find((o) => o.value === value)?.label ?? value;
                     }}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {MACHINE_TYPE_OPTIONS.map((opt) => (
+                  {typeOptions.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       <span className="flex items-center gap-2">
                         <span
-                          className={`inline-block size-2 shrink-0 rounded-full ${MACHINE_TYPE_CONFIG[opt.value]?.dotColor ?? "bg-muted-foreground"}`}
+                          className={`inline-block size-2 shrink-0 rounded-full ${typeConfig[opt.value]?.dotColor ?? "bg-muted-foreground"}`}
                         />
                         {opt.label}
                       </span>
@@ -246,6 +270,53 @@ export function MachineForm({
                   ))}
                 </SelectContent>
               </Select>
+              {!showNewType ? (
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-foreground cursor-pointer mt-1"
+                  onClick={() => setShowNewType(true)}
+                >
+                  + New type
+                </button>
+              ) : (
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="text"
+                    value={newTypeName}
+                    onChange={(e) => setNewTypeName(e.target.value)}
+                    placeholder="Type name"
+                    className="h-7 w-28 rounded border border-input bg-background px-2 text-xs outline-none focus:border-ring"
+                    autoFocus
+                  />
+                  <select
+                    value={newTypeColor}
+                    onChange={(e) => setNewTypeColor(e.target.value)}
+                    className="h-7 rounded border border-input bg-background px-1 text-xs outline-none"
+                  >
+                    <option value="blue">Blue</option>
+                    <option value="amber">Amber</option>
+                    <option value="emerald">Emerald</option>
+                    <option value="purple">Purple</option>
+                    <option value="red">Red</option>
+                    <option value="slate">Slate</option>
+                  </select>
+                  <button
+                    type="button"
+                    className="text-xs text-primary hover:underline cursor-pointer"
+                    onClick={handleAddType}
+                    disabled={addingType || !newTypeName.trim()}
+                  >
+                    {addingType ? "..." : "Add"}
+                  </button>
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                    onClick={() => { setShowNewType(false); setNewTypeName(""); }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </Field>
 
             {/* CPU Cores */}

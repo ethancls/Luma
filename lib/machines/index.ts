@@ -22,6 +22,8 @@ export interface CreateMachineData {
 
 export interface UpdateMachineData extends Partial<CreateMachineData> {
   status?: 'online' | 'offline' | 'unknown';
+  lastSeen?: Date;
+  latency?: number;
 }
 
 // Get paginated machines with filters

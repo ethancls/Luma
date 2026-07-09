@@ -5,7 +5,7 @@ import { logAudit } from '@/lib/audit';
 import { runDiscovery } from '@/lib/discovery';
 
 const configSchema = z.object({
-  host: z.string().url().optional(),
+  host: z.string().optional(),
   socketPath: z.string().optional(),
 }).refine((d) => d.host || d.socketPath, {
   message: 'Either host or socketPath is required',

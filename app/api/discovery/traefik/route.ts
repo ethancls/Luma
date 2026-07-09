@@ -5,7 +5,7 @@ import { logAudit } from '@/lib/audit';
 import { runDiscovery } from '@/lib/discovery';
 
 const configSchema = z.object({
-  url: z.string().url(),
+  url: z.string().min(1, 'URL is required'),
 });
 
 export async function POST(req: NextRequest) {

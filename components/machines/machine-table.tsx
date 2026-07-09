@@ -95,7 +95,7 @@ function formatRelativeTime(dateStr: string | null): string {
   return date.toLocaleDateString();
 }
 
-import { MACHINE_TYPE_CONFIG } from "@/lib/machine-types";
+import { useMachineTypes } from "@/lib/use-machine-types";
 
 // ---------------------------------------------------------------------------
 // Pagination helpers
@@ -143,6 +143,7 @@ export function MachineTable({
   onRowClick,
   loading = false,
 }: MachineTableProps) {
+  const { config: typeConfig } = useMachineTypes();
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   // ---- Loading ----
@@ -173,12 +174,12 @@ export function MachineTable({
       <Table variant="card">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-10">Status</TableHead>
+            <TableHead className="w-12">Status</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Host</TableHead>
             <TableHead>Type</TableHead>
-            <TableHead>Services</TableHead>
-            <TableHead>Last Seen</TableHead>
+            <TableHead>Latency</TableHead>
+            <TableHead className="w-24">Last Seen</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -188,7 +189,7 @@ export function MachineTable({
               className="cursor-pointer hover:bg-accent"
               onClick={() => onRowClick(machine.id)}
             >
-              <TableCell>
+              <TableCell className="pl-3">
                 <StatusDot status={machine.status} />
               </TableCell>
               <TableCell>
@@ -201,13 +202,13 @@ export function MachineTable({
               </TableCell>
               <TableCell>
                 <span
-                  className={`inline-flex shrink-0 items-center rounded-sm px-2.5 py-0.5 text-sm font-medium ring-1 ring-inset ${MACHINE_TYPE_CONFIG[machine.type]?.className ?? ""}`}
+                  className={`inline-flex shrink-0 items-center rounded-sm px-2 py-px text-xs font-medium ${typeConfig[machine.type]?.className ?? ""}`}
                 >
-                  {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
+                  {typeConfig[machine.type]?.label || machine.type}
                 </span>
               </TableCell>
-              <TableCell className="text-muted-foreground/50">
-                &mdash;
+              <TableCell className="text-muted-foreground text-sm">
+                {(machine as any).latency != null ? `${(machine as any).latency}ms` : "-"}
               </TableCell>
               <TableCell className="text-muted-foreground text-sm">
                 {formatRelativeTime(machine.lastSeen)}

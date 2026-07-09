@@ -27,36 +27,38 @@ export async function POST(
 
     const { stdout } = await execAsync(pingCmd, { timeout: 5000 });
 
-    const latency = Date.now() - startedAt;
-
-    // Parse ping output for actual RTT if available
     const rttMatch = stdout.match(/time[=<](\d+\.?\d*)\s*ms/i);
-    const rtt = rttMatch ? parseFloat(rttMatch[1]) : latency;
+    const rtt = rttMatch ? Math.round(parseFloat(rttMatch[1])) : Date.now() - startedAt;
 
-    await updateMachine(id, { status: "online" });
+    await updateMachine(id, {
+      status: "online",
+      lastSeen: new Date(),
+      latency: rtt,
+    });
+
     await addMachineLog(id, {
       level: "info",
-      message: `Ping successful — ${rtt.toFixed(1)}ms`,
+      message: `Ping successful — ${rtt}ms`,
       source: "ping",
       metadata: { latency: rtt },
     });
 
     return NextResponse.json({
-      data: { reachable: true, latency: Math.round(rtt) },
+      data: { reachable: true, latency: rtt },
     });
   } catch {
-    const latency = Date.now() - startedAt;
+    await updateMachine(id, {
+      status: "offline",
+    });
 
-    await updateMachine(id, { status: "offline" });
     await addMachineLog(id, {
       level: "warn",
       message: "Ping failed — host unreachable",
       source: "ping",
-      metadata: { latency },
     });
 
     return NextResponse.json({
-      data: { reachable: false, latency: Math.round(latency) },
+      data: { reachable: false, latency: 0 },
     });
   }
 }
