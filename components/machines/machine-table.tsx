@@ -205,7 +205,7 @@ export function MachineTable({
                 {machine.host}
               </TableCell>
               <TableCell>
-                <Badge size="sm" variant="secondary">
+                <Badge variant="secondary">
                   {TYPE_LABELS[machine.type] || machine.type}
                 </Badge>
               </TableCell>

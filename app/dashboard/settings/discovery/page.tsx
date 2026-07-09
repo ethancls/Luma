@@ -1,141 +1,130 @@
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { PageHeader } from '@/components/shared/page-header';
+import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Gear, Globe, Scan } from '@phosphor-icons/react';
 import { toastSuccess, toastError } from '@/lib/toast-utils';
+import { Separator } from '@/components/ui/separator';
 
-interface SourceState {
-  type: 'traefik' | 'docker' | 'scan';
-  label: string;
-  description: string;
-  icon: React.ReactNode;
-  lastSync: string | null;
-  syncing: boolean;
-  result: { found: number; new: number } | null;
-}
-
-const iconMap: Record<string, React.ReactNode> = {
-  traefik: <Gear className="size-6" />,
-  docker: <Scan className="size-6" />,
-  scan: <Globe className="size-6" />,
+const defaultConfigs: Record<string, Record<string, unknown>> = {
+  traefik: { url: 'http://localhost:8080' },
+  docker: { host: 'unix:///var/run/docker.sock' },
+  scan: { range: '192.168.1.1-254', ports: [80, 443, 3000, 8080, 8443] },
 };
 
-export default function DiscoverySettingsPage() {
-  const [sources, setSources] = useState<SourceState[]>([
-    {
-      type: 'traefik',
-      label: 'Traefik',
-      description: 'Discover services from a Traefik reverse proxy API endpoint.',
-      icon: iconMap.traefik,
-      lastSync: null,
-      syncing: false,
-      result: null,
-    },
-    {
-      type: 'docker',
-      label: 'Docker',
-      description: 'Discover containers and stacks from a Docker Engine.',
-      icon: iconMap.docker,
-      lastSync: null,
-      syncing: false,
-      result: null,
-    },
-    {
-      type: 'scan',
-      label: 'Network Scan',
-      description: 'Discover services by scanning a network range.',
-      icon: iconMap.scan,
-      lastSync: null,
-      syncing: false,
-      result: null,
-    },
-  ]);
+const sources = [
+  { type: 'traefik', label: 'Traefik', desc: 'Discover routers and services from a Traefik reverse proxy.', icon: Gear },
+  { type: 'docker', label: 'Docker', desc: 'Discover containers with Traefik labels from a Docker host.', icon: Scan },
+  { type: 'scan', label: 'Network Scan', desc: 'Scan a network range for open HTTP ports and services.', icon: Globe },
+];
 
-  const defaultConfigs: Record<string, Record<string, unknown>> = {
-    traefik: { url: 'http://localhost:8080' },
-    docker: { host: 'unix:///var/run/docker.sock' },
-    scan: { range: '192.168.1.1-254', ports: [80, 443, 3000, 8080, 8443] },
-  };
+interface SyncState {
+  syncing: boolean;
+  progress: number;
+  result: { found: number; new: number; updated: number } | null;
+  error: string | null;
+}
+
+export default function DiscoverySettingsPage() {
+  const [states, setStates] = useState<Record<string, SyncState>>({});
 
   const handleSync = useCallback(async (type: string) => {
-    setSources(prev => prev.map(s => s.type === type ? { ...s, syncing: true } : s));
+    setStates(prev => ({ ...prev, [type]: { syncing: true, progress: 0, result: null, error: null } }));
+
+    // Simulated progress while fetching
+    const interval = setInterval(() => {
+      setStates(prev => {
+        const s = prev[type];
+        if (!s?.syncing) return prev;
+        return { ...prev, [type]: { ...s, progress: Math.min(s.progress + 15, 90) } };
+      });
+    }, 200);
+
     try {
       const res = await fetch(`/api/discovery/${type}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(defaultConfigs[type] || {}),
       });
+      clearInterval(interval);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Sync failed');
-      setSources(prev => prev.map(s =>
-        s.type === type
-          ? { ...s, syncing: false, lastSync: new Date().toISOString(), result: json.data }
-          : s
-      ));
-      toastSuccess('Discovery complete', `${json.data.new} new services found.`);
+      setStates(prev => ({
+        ...prev,
+        [type]: { syncing: false, progress: 100, result: json.data, error: null },
+      }));
+      toastSuccess('Discovery complete', `${json.data.new} new, ${json.data.updated} updated.`);
     } catch (err) {
-      setSources(prev => prev.map(s => s.type === type ? { ...s, syncing: false } : s));
+      clearInterval(interval);
+      setStates(prev => ({
+        ...prev,
+        [type]: { syncing: false, progress: 0, result: null, error: err instanceof Error ? err.message : 'Failed' },
+      }));
       toastError('Discovery failed', err instanceof Error ? err.message : 'Unknown error');
     }
   }, []);
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Discovery Sources"
-        description="Auto-discover services from your infrastructure"
-      />
+    <div className="space-y-2">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Discovery</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Auto-discover services from your infrastructure</p>
+      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {sources.map((source) => (
-          <div
-            key={source.type}
-            className="flex flex-col gap-4 rounded-xl border bg-card p-5"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  {source.icon}
+      <Separator className="my-6" />
+
+      <div className="max-w-2xl">
+        {sources.map((source, i) => {
+          const state = states[source.type];
+          const syncing = state?.syncing;
+          const progress = state?.progress ?? 0;
+          const result = state?.result;
+          const error = state?.error;
+
+          return (
+            <div key={source.type}>
+              <div className="flex items-center gap-4 py-4">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <source.icon className="size-5" />
                 </span>
-                <div>
-                  <h3 className="font-semibold">{source.label}</h3>
-                  <p className="text-xs text-muted-foreground">{source.type}</p>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{source.label}</p>
+                    {result && !syncing && (
+                      <span className="text-xs text-muted-foreground">
+                        {result.found} found · {result.new} new · {result.updated} updated
+                      </span>
+                    )}
+                    {error && (
+                      <span className="text-xs text-red-500">{error}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{source.desc}</p>
+
+                  {syncing && (
+                    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  )}
                 </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  loading={syncing}
+                  onClick={() => handleSync(source.type)}
+                >
+                  Sync
+                </Button>
               </div>
-              {source.result && (
-                <Badge variant="success" size="sm">
-                  {source.result.new} new
-                </Badge>
-              )}
+              {i < sources.length - 1 && <Separator />}
             </div>
-
-            <p className="text-sm text-muted-foreground">{source.description}</p>
-
-            <Separator />
-
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Last sync</span>
-              <span>
-                {source.lastSync
-                  ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(source.lastSync))
-                  : 'Never'}
-              </span>
-            </div>
-
-            <Button
-              size="sm"
-              variant="outline"
-              loading={source.syncing}
-              onClick={() => handleSync(source.type)}
-            >
-              Sync Now
-            </Button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
