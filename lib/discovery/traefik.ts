@@ -5,17 +5,11 @@ export async function discoverTraefik(config: { url: string }): Promise<Discover
   const apiUrl = `${baseUrl}/api/http/routers`;
 
   let data: unknown;
-  try {
-    const res = await fetch(apiUrl, { signal: AbortSignal.timeout(10_000) });
-    if (!res.ok) {
-      console.error(`Traefik API returned ${res.status} from ${apiUrl}`);
-      return [];
-    }
-    data = await res.json();
-  } catch (err) {
-    console.error(`Failed to fetch Traefik routers from ${apiUrl}:`, err);
-    return [];
+  const res = await fetch(apiUrl, { signal: AbortSignal.timeout(10_000) });
+  if (!res.ok) {
+    throw new Error(`Traefik API returned ${res.status} — is the Traefik API reachable at ${config.url}?`);
   }
+  data = await res.json();
 
   if (!Array.isArray(data)) {
     // Traefik v2 returns an array, v3 may return an object keyed by router name

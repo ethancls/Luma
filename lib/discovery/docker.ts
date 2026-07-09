@@ -16,18 +16,11 @@ export async function discoverDocker(config: { socketPath?: string; host?: strin
   const baseUrl = config.host.replace(/\/+$/, '');
   const apiUrl = `${baseUrl}/containers/json?all=true`;
 
-  let containers: DockerContainer[];
-  try {
-    const res = await fetch(apiUrl, { signal: AbortSignal.timeout(10_000) });
-    if (!res.ok) {
-      console.error(`Docker API returned ${res.status} from ${apiUrl}`);
-      return [];
-    }
-    containers = await res.json();
-  } catch (err) {
-    console.error('Failed to fetch Docker containers:', err);
-    return [];
+  const res = await fetch(apiUrl, { signal: AbortSignal.timeout(10_000) });
+  if (!res.ok) {
+    throw new Error(`Docker API returned ${res.status} — is the Docker host reachable at ${config.host}?`);
   }
+  const containers: DockerContainer[] = await res.json();
 
   const found: DiscoveredService[] = [];
 

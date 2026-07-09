@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, PencilSimple, Trash, DesktopTower } from "@phosphor-icons/react";
+import { ArrowLeft, PencilSimple, Trash, DesktopTower, Activity } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { MachineForm } from "@/components/machines/machine-form";
@@ -93,6 +93,8 @@ export default function MachineDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [pinging, setPinging] = useState(false);
+  const [pingResult, setPingResult] = useState<{ reachable: boolean; latency: number } | null>(null);
 
   const fetchMachine = useCallback(async () => {
     setLoading(true);
@@ -113,6 +115,21 @@ export default function MachineDetailPage() {
       setLoading(false);
     }
   }, [id]);
+
+  const handlePing = useCallback(async () => {
+    setPinging(true);
+    setPingResult(null);
+    try {
+      const res = await fetch(`/api/machines/${id}/ping`, { method: "POST" });
+      const json = await res.json();
+      setPingResult(json.data);
+      fetchMachine();
+    } catch {
+      setPingResult({ reachable: false, latency: 0 });
+    } finally {
+      setPinging(false);
+    }
+  }, [id, fetchMachine]);
 
   useEffect(() => {
     fetchMachine();
@@ -248,11 +265,19 @@ export default function MachineDetailPage() {
         >
           {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
         </span>
-        {machine.lastSeen && (
-          <span className="text-sm text-muted-foreground">
-            Last seen: {formatDate(machine.lastSeen)}
-          </span>
-        )}
+        <span className="text-sm text-muted-foreground">
+          Last seen: {machine.lastSeen ? formatDate(machine.lastSeen) : "Never"}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handlePing}
+          disabled={pinging}
+          className="gap-1.5"
+        >
+          <Activity className={`size-3.5 ${pinging ? "animate-spin" : ""}`} />
+          {pinging ? "Pinging..." : pingResult ? `${pingResult.latency}ms` : "Ping"}
+        </Button>
       </div>
 
       {/* Machine info card */}
