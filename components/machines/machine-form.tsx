@@ -21,6 +21,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { toastSuccess, toastError } from "@/lib/toast-utils";
+import { MACHINE_TYPE_CONFIG, MACHINE_TYPE_OPTIONS } from "@/lib/machine-types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,17 +48,6 @@ interface MachineFormProps {
   machine?: Machine | null;
   onSuccess: () => void;
 }
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const TYPE_OPTIONS = [
-  { value: "vps", label: "VPS" },
-  { value: "bare-metal", label: "Bare Metal" },
-  { value: "pi", label: "Raspberry Pi" },
-  { value: "nas", label: "NAS" },
-];
 
 // ---------------------------------------------------------------------------
 // Component
@@ -239,14 +229,19 @@ export function MachineForm({
                 <SelectTrigger>
                   <SelectValue placeholder="Select type">
                     {(value: string) => {
-                      return TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
+                      return MACHINE_TYPE_OPTIONS.find((o) => o.value === value)?.label ?? value;
                     }}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {TYPE_OPTIONS.map((opt) => (
+                  {MACHINE_TYPE_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`inline-block size-2 shrink-0 rounded-full ${MACHINE_TYPE_CONFIG[opt.value]?.dotColor ?? "bg-muted-foreground"}`}
+                        />
+                        {opt.label}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

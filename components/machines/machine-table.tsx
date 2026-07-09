@@ -95,12 +95,7 @@ function formatRelativeTime(dateStr: string | null): string {
   return date.toLocaleDateString();
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  vps: "VPS",
-  "bare-metal": "Bare Metal",
-  pi: "Raspberry Pi",
-  nas: "NAS",
-};
+import { MACHINE_TYPE_CONFIG } from "@/lib/machine-types";
 
 // ---------------------------------------------------------------------------
 // Pagination helpers
@@ -205,8 +200,11 @@ export function MachineTable({
                 {machine.host}
               </TableCell>
               <TableCell>
-                <Badge variant="secondary">
-                  {TYPE_LABELS[machine.type] || machine.type}
+                <Badge
+                  variant="secondary"
+                  className={MACHINE_TYPE_CONFIG[machine.type]?.className}
+                >
+                  {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
                 </Badge>
               </TableCell>
               <TableCell className="text-muted-foreground/50">

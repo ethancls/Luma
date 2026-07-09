@@ -66,12 +66,7 @@ function StatusDot({ status }: { status: string }) {
   );
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  vps: "VPS",
-  "bare-metal": "Bare Metal",
-  pi: "Raspberry Pi",
-  nas: "NAS",
-};
+import { MACHINE_TYPE_CONFIG } from "@/lib/machine-types";
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "Never";
@@ -248,8 +243,11 @@ export default function MachineDetailPage() {
       {/* Status + type row */}
       <div className="flex items-center gap-3">
         <StatusDot status={machine.status} />
-        <Badge size="sm" variant="secondary">
-          {TYPE_LABELS[machine.type] || machine.type}
+        <Badge
+          variant="secondary"
+          className={MACHINE_TYPE_CONFIG[machine.type]?.className}
+        >
+          {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
         </Badge>
         {machine.lastSeen && (
           <span className="text-sm text-muted-foreground">
@@ -271,9 +269,12 @@ export default function MachineDetailPage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Type</p>
-              <p className="text-sm">
-                {TYPE_LABELS[machine.type] || machine.type}
-              </p>
+              <Badge
+                variant="secondary"
+                className={MACHINE_TYPE_CONFIG[machine.type]?.className}
+              >
+                {MACHINE_TYPE_CONFIG[machine.type]?.label || machine.type}
+              </Badge>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">CPU</p>
