@@ -87,37 +87,29 @@ function PingSparkline({ machineId }: { machineId: string }) {
 
   if (points.length < 2) return null;
 
-  const w = 300;
-  const h = 40;
-  const pad = 2;
+  const w = 160;
+  const h = 32;
   const max = Math.max(...points, 1);
   const min = Math.min(...points, 0);
   const range = max - min || 1;
-  const stepX = (w - pad * 2) / (points.length - 1);
+  const stepX = w / (points.length - 1);
 
   const line = points
     .map((v, i) => {
-      const x = pad + i * stepX;
-      const y = pad + h - pad * 2 - ((v - min) / range) * (h - pad * 4);
+      const x = i * stepX;
+      const y = h - 2 - ((v - min) / range) * (h - 4);
       return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
     })
     .join(" ");
 
-  const area = `${line} L ${pad + (points.length - 1) * stepX} ${h - pad} L ${pad} ${h - pad} Z`;
+  const last = points[points.length - 1];
 
   return (
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-      <span>Latency (60s)</span>
-      <svg viewBox={`0 0 ${w} ${h}`} className="h-10 w-[300px]">
-        <path d={area} fill="url(#pingGrad)" />
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-8 w-[160px]">
         <path d={line} fill="none" stroke="var(--color-primary,#3A88FE)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <defs>
-          <linearGradient id="pingGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-primary,#3A88FE)" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="var(--color-primary,#3A88FE)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
       </svg>
+      <span className="font-mono tabular-nums">{last}ms</span>
     </div>
   );
 }
@@ -267,7 +259,14 @@ export default function MachineDetailPage() {
       </Link>
 
       {/* Header */}
-      <PageHeader title={machine.name}>
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{machine.name}</h1>
+        </div>
+        <div className="hidden md:block">
+          <PingSparkline machineId={id} />
+        </div>
+        <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -324,11 +323,8 @@ export default function MachineDetailPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
-        <div className="ml-4 hidden md:block">
-          <PingSparkline machineId={id} />
         </div>
-      </PageHeader>
+      </div>
 
       {/* Status + type row */}
       <div className="flex items-center gap-3">
@@ -412,25 +408,6 @@ export default function MachineDetailPage() {
           ) : (
             <p className="text-sm text-muted-foreground/50">No notes yet.</p>
           )}
-        </CardPanel>
-      </Card>
-
-      {/* Services placeholder */}
-      <Card>
-        <CardPanel>
-          <div className="flex flex-col items-center justify-center py-12">
-            <Empty>
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <DesktopTower className="size-6 text-foreground" />
-                </EmptyMedia>
-                <EmptyTitle>No services linked</EmptyTitle>
-                <EmptyDescription>
-                  This machine doesn't have any services assigned to it yet.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </div>
         </CardPanel>
       </Card>
 

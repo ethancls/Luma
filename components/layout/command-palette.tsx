@@ -14,14 +14,13 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
-import { SquaresFour, Stack, DesktopTower, ClockCounterClockwise, Gear, Plus, ArrowSquareOut } from '@phosphor-icons/react';
+import { SquaresFour, DesktopTower, ClockCounterClockwise, Gear, ArrowSquareOut } from '@phosphor-icons/react';
 
 const ACTIONS = [
   {
     group: 'Navigate',
     items: [
       { label: 'Dashboard', icon: SquaresFour, action: '/dashboard' },
-      { label: 'Services', icon: Stack, action: '/dashboard/services' },
       { label: 'Machines', icon: DesktopTower, action: '/dashboard/machines' },
       { label: 'Activity', icon: ClockCounterClockwise, action: '/dashboard/audit' },
       { label: 'Settings', icon: Gear, action: '/dashboard/settings' },
@@ -30,7 +29,6 @@ const ACTIONS = [
   {
     group: 'Actions',
     items: [
-      { label: 'Add Service', icon: Plus, action: '/dashboard/services' },
       { label: 'See docs', icon: ArrowSquareOut, action: 'https://github.com/ethancls/luma/docs' },
     ],
   },

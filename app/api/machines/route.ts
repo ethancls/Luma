@@ -7,7 +7,7 @@ import { getMachines, createMachine } from '@/lib/machines';
 const createMachineSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   host: z.string().min(1, 'Host is required'),
-  type: z.enum(['vps', 'bare-metal', 'pi', 'nas']).optional(),
+  type: z.string().optional(),
   cpuCores: z.number().int().positive().optional(),
   ramGb: z.number().int().positive().optional(),
   diskGb: z.number().int().positive().optional(),

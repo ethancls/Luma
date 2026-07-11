@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign in - Luma',
+  title: 'Sign in',
   description: 'Sign in to your Luma dashboard.',
 };
 

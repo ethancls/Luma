@@ -20,12 +20,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             alt="Luma"
             width={140}
             height={35}
-            style={{ height: 'auto' }}
+            style={{ width: 140, height: 'auto' }}
             priority
           />
           <div className="space-y-6">
             <div className="space-y-3">
-              <h2 className="text-3xl font-semibold leading-tight text-white">
+              <h2 className="font-heading text-3xl font-semibold leading-tight text-white">
                 Manage your infrastructure
               </h2>
               <p className="max-w-sm text-sm leading-relaxed text-zinc-400">

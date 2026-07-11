@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 
 const SETTINGS_LINKS = [
   { href: '/dashboard/settings', label: 'Account', exact: true },
-  { href: '/dashboard/settings/discovery', label: 'Discovery', exact: false },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

@@ -1,48 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { getServices } from '@/lib/services';
-import { getMachines } from '@/lib/machines';
+import { db } from '@/lib/db';
+import { machines, connectionSessions } from '@/db/schema';
+import { eq, desc, isNull, count } from 'drizzle-orm';
 
 export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({ headers: req.headers });
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const { services, total: totalServices } = await getServices({ limit: 1 });
-    const { services: onlineList, total: onlineCount } = await getServices({ status: 'online', limit: 1 });
-    const { services: offlineList, total: offlineCount } = await getServices({ status: 'offline', limit: 1 });
-    const { machines, total: totalMachines } = await getMachines({ limit: 1 });
-
-    // Get all services to filter TLS expiry within 30 days
-    const { services: allServices } = await getServices({ limit: 1000 });
-    const now = Date.now();
-    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-    const tlsExpiringServices = allServices
-      .filter((s) => s.tlsExpiry != null && s.tlsExpiry < new Date(now + thirtyDays))
-      .map((s) => ({
-        id: s.id,
-        name: s.name,
-        url: s.url,
-        tlsExpiry: s.tlsExpiry,
-      }));
-
-    const offlineServiceRows = offlineList.slice(0, 5);
+    const [totalResult, onlineResult, offlineResult, sessionsResult, recentSessions] = await Promise.all([
+      db.select({ count: count() }).from(machines),
+      db.select({ count: count() }).from(machines).where(eq(machines.status, 'online')),
+      db.select({ count: count() }).from(machines).where(eq(machines.status, 'offline')),
+      db.select({ count: count() }).from(connectionSessions).where(isNull(connectionSessions.endedAt)),
+      db.select({
+        id: connectionSessions.id,
+        connectionName: connectionSessions.id,
+        machineName: connectionSessions.id,
+        userId: connectionSessions.userId,
+        startedAt: connectionSessions.startedAt,
+        duration: connectionSessions.duration,
+      }).from(connectionSessions).orderBy(desc(connectionSessions.startedAt)).limit(10),
+    ]);
 
     return NextResponse.json({
       data: {
-        totalServices,
-        onlineCount,
-        offlineCount,
-        totalMachines,
-        offlineServices: offlineServiceRows,
-        // TODO: global recent checks/logs query
-        recentChecks: [],
-        recentLogs: [],
-        tlsExpiring: tlsExpiringServices,
+        totalMachines: totalResult[0]?.count ?? 0,
+        onlineCount: onlineResult[0]?.count ?? 0,
+        offlineCount: offlineResult[0]?.count ?? 0,
+        activeSessions: sessionsResult[0]?.count ?? 0,
+        recentSessions,
       },
     });
-  } catch (error) {
-    console.error('Failed to fetch dashboard stats', error);
-    return NextResponse.json({ error: 'Failed to fetch dashboard stats' }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to load dashboard' }, { status: 500 });
   }
 }

@@ -171,6 +171,7 @@
     --code: var(--color-white);
     --code-foreground: var(--foreground);
     --code-highlight: --alpha(var(--color-black) / 4%);
+    --font-heading: 'Momo Trust Display', sans-serif;
     --radius: 0.625rem;
     --sidebar: var(--color-neutral-50);
     --sidebar-accent: --alpha(var(--color-black) / 4%);

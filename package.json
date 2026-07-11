@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@fontsource/momo-trust-display": "^5.2.1",
     "@phosphor-icons/react": "^2.1.10",
     "better-auth": "^1.6.23",
     "better-sqlite3": "^12.11.1",

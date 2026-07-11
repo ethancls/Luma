@@ -13,7 +13,7 @@ export interface MachineFilters {
 export interface CreateMachineData {
   name: string;
   host: string;
-  type?: 'vps' | 'bare-metal' | 'pi' | 'nas';
+  type?: string;
   cpuCores?: number;
   ramGb?: number;
   diskGb?: number;

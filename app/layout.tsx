@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google"
+import "@fontsource/momo-trust-display"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ToastProvider, AnchoredToastProvider } from "@/components/ui/toast"

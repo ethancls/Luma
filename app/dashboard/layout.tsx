@@ -8,7 +8,7 @@ import { headers } from 'next/headers';
 
 export const metadata: Metadata = {
   title: { default: 'Dashboard', template: '%s' },
-  description: 'Manage your homelab services with Luma.',
+  description: 'Remote access and machine management with Luma.',
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {

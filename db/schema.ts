@@ -119,16 +119,7 @@ export const accessLogs = sqliteTable('access_logs', {
   createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow().notNull(),
 });
 
-/* ─── Luma v2: service inventory tables ─── */
-
-export const categories = sqliteTable('categories', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  slug: text('slug').notNull().unique(),
-  icon: text('icon'),
-  color: text('color'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow().notNull(),
-});
+/* ─── Luma v2: machine & connection tables ─── */
 
 export const machines = sqliteTable('machines', {
   id: text('id').primaryKey(),
@@ -153,51 +144,32 @@ export const machineTypes = sqliteTable('machine_types', {
   createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow().notNull(),
 });
 
-export const services = sqliteTable('services', {
+export const connections = sqliteTable('connections', {
   id: text('id').primaryKey(),
+  machineId: text('machine_id').notNull().references(() => machines.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
-  url: text('url'),
-  port: integer('port'),
-  description: text('description'),
-  status: text('status', { enum: ['online', 'degraded', 'offline', 'unknown'] }).default('unknown').notNull(),
-  categoryId: text('category_id').references(() => categories.id, { onDelete: 'set null' }),
-  tags: text('tags', { mode: 'json' }).$type<string[]>().default([]),
-  dockerComposeSnippet: text('docker_compose_snippet'),
-  notes: text('notes'),
-  tlsExpiry: integer('tls_expiry', { mode: 'timestamp' }),
-  tlsIssuer: text('tls_issuer'),
-  lastChecked: integer('last_checked', { mode: 'timestamp' }),
+  protocol: text('protocol', { enum: ['ssh', 'rdp', 'vnc', 'telnet'] }).notNull(),
+  host: text('host'),
+  port: integer('port').notNull(),
+  username: text('username').notNull(),
+  credential: text('credential').notNull(),
+  credentialType: text('credential_type', { enum: ['password', 'private_key'] }).notNull().default('password'),
+  parameters: text('parameters', { mode: 'json' }).$type<Record<string, unknown>>().default({}),
   createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow().notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).defaultNow().notNull(),
 });
 
-export const serviceMachine = sqliteTable(
-  'service_machine',
-  {
-    serviceId: text('service_id').notNull().references(() => services.id, { onDelete: 'cascade' }),
-    machineId: text('machine_id').notNull().references(() => machines.id, { onDelete: 'cascade' }),
-  },
-  (t) => [primaryKey({ columns: [t.serviceId, t.machineId] })],
-);
-
-export const checks = sqliteTable('checks', {
+export const connectionSessions = sqliteTable('connection_sessions', {
   id: text('id').primaryKey(),
-  serviceId: text('service_id').notNull().references(() => services.id, { onDelete: 'cascade' }),
-  statusCode: integer('status_code'),
-  responseMs: integer('response_ms'),
-  error: text('error'),
-  tlsDaysRemaining: integer('tls_days_remaining'),
-  checkedAt: integer('checked_at', { mode: 'timestamp' }).defaultNow().notNull(),
-});
-
-export const serviceLogs = sqliteTable('service_logs', {
-  id: text('id').primaryKey(),
-  serviceId: text('service_id').notNull().references(() => services.id, { onDelete: 'cascade' }),
-  level: text('level', { enum: ['info', 'warn', 'error'] }).default('info').notNull(),
-  message: text('message').notNull(),
-  source: text('source', { enum: ['healthcheck', 'manual', 'discovery'] }).default('manual').notNull(),
-  metadata: text('metadata', { mode: 'json' }).$type<Record<string, unknown>>(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow().notNull(),
+  connectionId: text('connection_id').notNull().references(() => connections.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  sharedWith: text('shared_with', { mode: 'json' }).$type<string[]>().default([]),
+  startedAt: integer('started_at', { mode: 'timestamp' }).defaultNow().notNull(),
+  endedAt: integer('ended_at', { mode: 'timestamp' }),
+  duration: integer('duration'),
+  recordingPath: text('recording_path'),
+  recordingSize: integer('recording_size'),
+  includeKeys: integer('include_keys', { mode: 'boolean' }).default(true).notNull(),
 });
 
 export const machineLogs = sqliteTable('machine_logs', {
@@ -207,14 +179,5 @@ export const machineLogs = sqliteTable('machine_logs', {
   message: text('message').notNull(),
   source: text('source', { enum: ['ping', 'manual', 'discovery'] }).default('manual').notNull(),
   metadata: text('metadata', { mode: 'json' }).$type<Record<string, unknown>>(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow().notNull(),
-});
-
-export const discoverySources = sqliteTable('discovery_sources', {
-  id: text('id').primaryKey(),
-  type: text('type', { enum: ['traefik', 'docker', 'scan'] }).notNull(),
-  config: text('config', { mode: 'json' }).$type<Record<string, unknown>>().default({}),
-  lastSync: integer('last_sync', { mode: 'timestamp' }),
-  enabled: integer('enabled', { mode: 'boolean' }).default(true).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).defaultNow().notNull(),
 });

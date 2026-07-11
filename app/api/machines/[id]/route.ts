@@ -7,7 +7,7 @@ import { getMachine, updateMachine, deleteMachine } from '@/lib/machines';
 const updateMachineSchema = z.object({
   name: z.string().min(1).optional(),
   host: z.string().min(1).optional(),
-  type: z.enum(['vps', 'bare-metal', 'pi', 'nas']).optional(),
+  type: z.string().optional(),
   cpuCores: z.number().int().positive().optional(),
   ramGb: z.number().int().positive().optional(),
   diskGb: z.number().int().positive().optional(),

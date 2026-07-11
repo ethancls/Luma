@@ -3,11 +3,10 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useSidebarContext } from './sidebar-context';
-import { SquaresFour, Stack, DesktopTower, ClockCounterClockwise, Gear } from '@phosphor-icons/react';
+import { SquaresFour, DesktopTower, ClockCounterClockwise, Gear } from '@phosphor-icons/react';
 
 const MAIN_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: SquaresFour, exact: true },
-  { href: '/dashboard/services', label: 'Services', icon: Stack },
   { href: '/dashboard/machines', label: 'Machines', icon: DesktopTower },
 ];
 
