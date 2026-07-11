@@ -1,0 +1,27 @@
+services:
+  luma:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+      - ./data/recordings:/data/recordings
+    environment:
+      - NODE_ENV=production
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - DATABASE_URL=${DATABASE_URL:-/data/luma.db}
+      - CONNECTION_ENCRYPTION_KEY=${CONNECTION_ENCRYPTION_KEY}
+      - GUACD_HOST=guacd
+      - GUACD_PORT=4822
+      - ENABLE_REGISTRATION=${ENABLE_REGISTRATION:-false}
+    depends_on:
+      - guacd
+
+  guacd:
+    image: guacamole/guacd:latest
+    ports:
+      - "4822:4822"
+    volumes:
+      - ./data/recordings:/data/recordings
+    restart: unless-stopped
