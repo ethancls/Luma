@@ -9,6 +9,9 @@ const envSchema = z.object({
   OIDC_ISSUER: z.string().optional(),
   OIDC_NAME: z.string().optional(),
   ENABLE_REGISTRATION: z.coerce.boolean().default(false),
+  CONNECTION_ENCRYPTION_KEY: z.string().min(32).default('change-me-32-chars-minimum!!'),
+  GUACD_HOST: z.string().default('localhost'),
+  GUACD_PORT: z.coerce.number().default(4822),
 });
 
 export const env = envSchema.parse(process.env);
