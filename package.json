@@ -4,9 +4,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "tsx --env-file=.env server.ts",
+    "dev": "next dev",
     "build": "next build",
     "start": "NODE_ENV=production tsx --env-file=.env server.ts",
+    "dev:full": "tsx --env-file=.env server.ts",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
