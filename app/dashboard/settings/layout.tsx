@@ -9,7 +9,7 @@ const SETTINGS_LINKS = [
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
 
   return (
     <div className="space-y-6">

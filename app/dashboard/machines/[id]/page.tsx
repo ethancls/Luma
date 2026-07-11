@@ -133,7 +133,7 @@ function formatDate(dateStr: string | null): string {
 export default function MachineDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const id = (params as any)?.id as string;
 
   const [machine, setMachine] = useState<Machine | null>(null);
   const [loading, setLoading] = useState(true);

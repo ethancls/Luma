@@ -18,8 +18,8 @@ interface ConnectionInfo {
 
 export default function ConnectPage() {
   const params = useParams();
-  const machineId = params.id as string;
-  const connectionId = params.connectionId as string;
+  const machineId = params?.id as string;
+  const connectionId = params?.connectionId as string;
 
   const [connection, setConnection] = useState<ConnectionInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +84,8 @@ export default function ConnectPage() {
     if (!Guacamole) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/api/connect/${connectionId}/ws`;
+    const wsHost = `${window.location.hostname}:3001`;
+    const wsUrl = `${protocol}//${wsHost}/api/connect/${connectionId}/ws`;
 
     const tunnel = new Guacamole.WebSocketTunnel(wsUrl);
     const client = new Guacamole.Client(tunnel);

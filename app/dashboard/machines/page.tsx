@@ -33,7 +33,7 @@ const STATUS_OPTIONS = [
 
 export default function MachinesPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams() ?? new URLSearchParams();
   const pathname = usePathname();
 
   const [machines, setMachines] = useState([]);

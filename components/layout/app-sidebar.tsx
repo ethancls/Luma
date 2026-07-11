@@ -21,7 +21,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ hideOnMobile = false }: AppSidebarProps) {
   const { isCollapsed } = useSidebarContext();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const router = useRouter();
 
   return (
