@@ -2,7 +2,7 @@ import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PROTECTED_PATHS = ['/dashboard', '/api/machines', '/api/settings', '/api/audit', '/api/users', '/api/connect'];
+const PROTECTED_PATHS = ['/dashboard', '/api/machines', '/api/settings', '/api/audit', '/api/users'];
 const AUTH_PATHS = ['/login', '/register'];
 
 export async function proxy(req: NextRequest) {
