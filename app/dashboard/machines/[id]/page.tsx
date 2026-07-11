@@ -7,6 +7,7 @@ import { ArrowLeft, PencilSimple, Trash, DesktopTower, ArrowClockwise } from "@p
 import { PageHeader } from "@/components/shared/page-header";
 import { ErrorState } from "@/components/shared/error-state";
 import { MachineForm } from "@/components/machines/machine-form";
+import { ConnectionList } from "@/components/connections/connection-list";
 import { Card, CardHeader, CardTitle, CardPanel } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -410,6 +411,9 @@ export default function MachineDetailPage() {
           )}
         </CardPanel>
       </Card>
+
+      {/* Connections */}
+      <ConnectionList machineId={id} machineHost={machine.host} />
 
       {/* Form dialog */}
       <MachineForm
