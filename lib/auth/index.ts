@@ -16,7 +16,7 @@ if (env.OIDC_CLIENT_ID && env.OIDC_CLIENT_SECRET && env.OIDC_ISSUER) {
           providerId: env.OIDC_NAME || 'oidc',
           clientId: env.OIDC_CLIENT_ID,
           clientSecret: env.OIDC_CLIENT_SECRET,
-          issuer: env.OIDC_ISSUER,
+          accountIssuer: env.OIDC_ISSUER,
           discoveryUrl: `${env.OIDC_ISSUER}/.well-known/openid-configuration`,
           scopes: ['openid', 'email', 'profile'],
         },
